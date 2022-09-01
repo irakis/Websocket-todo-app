@@ -8,7 +8,7 @@ const App = () => {
 
   const [socket, setSocket] = useState(null);
   const [tasks, setTask] = useState([]);
-  const [taskName, setTaskName] = useState([]);
+  const [taskName, setTaskName] = useState('');
 
   console.log('tasks array', tasks);
 
@@ -18,38 +18,36 @@ const App = () => {
     })
     setSocket(socket);
 
-    socket.on('updateData', (tasks) => updateTask(tasks));
-    socket.on('addTask', (task) => addTask(task));
+    socket.on('updateData', (tasksData) => updateTask(tasksData));
+    socket.on('addTask', (newTask) => {addTask(newTask)});
     socket.on('removeTask', (taskId) => removeTask(taskId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateTask = (tasks) => {
-    setTask(tasks);
-  }
+  const updateTask = (tasksData) => {
+    setTask(tasksData);
+  };
 
   const removeTask = (e, taskId, local) => {
     console.log('taskId w remove: ',taskId, local)
     setTask((tasks) => tasks.filter(task => task.id !== taskId));
     if (local === true)  socket.emit('removeTask', taskId );
-  }
+  };
 
   const submitForm = (e) => {
     e.preventDefault();
     
-    const newTask = { name: taskName, id: shortid() }
-    if(newTask.name == '') { alert ('Field cant be empty...') 
+    const inputTask = { name: taskName, id: shortid() }
+    if(inputTask.name === '') { alert ('Field cant be empty...') 
       } else {
-    addTask(newTask)
+    addTask(inputTask)
 
-    socket.emit('addTask', newTask);
-    console.log('newTask w app:', newTask)
+    socket.emit('addTask', inputTask);
+    console.log('newTask w app:', inputTask)
     }
-  }
+  };
 
-  const addTask = ({ id, name }) => { setTask([...tasks, { id, name }])
-    console.log('taclica lokalna w app po add task?? ', tasks);
-  }
+  const addTask = (data) => {setTask(tasks => [...tasks, data])};
 
   return (
     <div className="App">
@@ -61,7 +59,6 @@ const App = () => {
         <h2>Tasks</h2>
 
         <ul className="tasks-section__list" id="tasks-list">
-          {console.log('tasks w html:', tasks)}
           {tasks.map((item) => (<li key={shortid()} className="task">{item.name}
               <button onClick={() => removeTask(e, item.id, true)} className="btn btn--red">Remove</button></li>))
           }
