@@ -10,8 +10,6 @@ const App = () => {
   const [tasks, setTask] = useState([]);
   const [taskName, setTaskName] = useState('');
 
-  console.log('tasks array', tasks);
-
   useEffect(() => {
     const socket = io.connect('http://localhost:8080', {
       transports: ['websocket'],
@@ -20,7 +18,7 @@ const App = () => {
 
     socket.on('updateData', (tasksData) => updateTask(tasksData));
     socket.on('addTask', (newTask) => {addTask(newTask)});
-    socket.on('removeTask', (taskId) => removeTask(taskId));
+    socket.on('removeTask', (taskId) => removeTask(e, taskId, false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -29,21 +27,18 @@ const App = () => {
   };
 
   const removeTask = (e, taskId, local) => {
-    console.log('taskId w remove: ',taskId, local)
     setTask((tasks) => tasks.filter(task => task.id !== taskId));
     if (local === true)  socket.emit('removeTask', taskId );
   };
 
   const submitForm = (e) => {
     e.preventDefault();
-    
     const inputTask = { name: taskName, id: shortid() }
     if(inputTask.name === '') { alert ('Field cant be empty...') 
       } else {
     addTask(inputTask)
-
     socket.emit('addTask', inputTask);
-    console.log('newTask w app:', inputTask)
+    setTaskName('');
     }
   };
 
@@ -57,12 +52,10 @@ const App = () => {
 
       <section className="tasks-section" id="tasks-section">
         <h2>Tasks</h2>
-
         <ul className="tasks-section__list" id="tasks-list">
           {tasks.map((item) => (<li key={shortid()} className="task">{item.name}
               <button onClick={() => removeTask(e, item.id, true)} className="btn btn--red">Remove</button></li>))
           }
-
         </ul>
 
         <form id="add-task-form" onSubmit={submitForm}>
